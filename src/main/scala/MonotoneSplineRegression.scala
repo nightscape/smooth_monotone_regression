@@ -38,16 +38,16 @@ class MonotoneSplineRegression(knots: Knots) {
     println("Restriction")
     println(restrictionMatrix)
     val objectiveFunction = new PDQuadraticMultivariateRealFunction(toArrayMatrix(minimizationMatrix), null, 0)
-    val b = Array(1.0)
     val inequalities = (0 until restrictionMatrix.rows).toArray.map { r =>
       val restrictionRow = (0 until restrictionMatrix.cols).toArray.map { c => restrictionMatrix(r, c) }
-      new LinearMultivariateRealFunction(restrictionRow, 0)
+      new LinearMultivariateRealFunction(restrictionRow, 0):ConvexMultivariateRealFunction
     }
     val or = new OptimizationRequest()
     or.setF0(objectiveFunction)
-    or.setInitialPoint(Array.fill[Double](splines.size + xs.size + 1)(0.5))
+    //or.setInitialPoint(Array.fill[Double](splines.size + xs.size + 1)(0.5))
     or.setA(equationArrMatrix)
     or.setB(ys)
+    or.setFi(inequalities)
     or.setToleranceFeas(1.0E-12)
     or.setTolerance(1.0E-12)
     val opt = new JOptimizer()
