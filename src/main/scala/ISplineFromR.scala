@@ -1,8 +1,8 @@
 import breeze.linalg.DenseMatrix
 import breeze.linalg.DenseVector
 
-object ISplineFromR {
-  def monotoneIncreasing(x: DenseVector[Double], t: DenseVector[Double]): DenseMatrix[Double] = {
+class ISplineFromR(t: DenseVector[Double]) {
+  def monotoneIncreasing(x: DenseVector[Double]): DenseMatrix[Double] = {
     val n = x.length
     val k = t.length - 2
     val m = k + 3
