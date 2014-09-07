@@ -20,8 +20,9 @@ libraryDependencies ++= Seq(
   "com.chuusai" %% "shapeless" % "2.0.0",
   "org.rogach" %% "scallop" % "0.9.5",
   "com.softwaremill.scalamacrodebug" %% "macros" % "0.4",
-  "org.scalacheck" %% "scalacheck" % "1.11.5" % "test",
   "org.scalactic" %% "scalactic" % "2.2.1",
+  "org.scalatest" %% "scalatest" % "2.2.1" % "test",
+  "org.scalacheck" %% "scalacheck" % "1.11.5" % "test",
   "org.scalamock" %% "scalamock" % "3.1.2" % "test",
   "org.scalamock" %% "scalamock-scalatest-support" % "3.1.2" % "test",
   "junit" % "junit" % "4.11" % "test",
@@ -33,6 +34,7 @@ resolvers ++= Seq(
   "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
   "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/",
   "org.catch22" at "http://marklister.github.io/product-collections/",
+  "bla bintray" at "http://dl.bintray.com/advaitraut/maven",
   Resolver.sonatypeRepo("releases"),
   Resolver.sonatypeRepo("snapshots"),
   Classpaths.typesafeReleases

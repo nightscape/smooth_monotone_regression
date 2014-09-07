@@ -12,18 +12,19 @@ class MonotoneSplineRegression(knots: Knots) {
   val order = 2
   def iSplines(i: Int) = new NumericalISpline(knots)(order, i, _: Double)
   val splines = (0 until knots.length - 2 + order).map(iSplines)
+  def regressionMatrix(xs: Seq[Double]) = DenseMatrix.tabulate(xs.size, splines.size) { (ix, is) =>
+    val x = xs(ix)
+    val spline = splines(is)
+    spline(x)
+  }
   def learn(xs: Array[Double], ys: Array[Double]): Double => Double = {
-    val regressionMatrix = DenseMatrix.tabulate(xs.size, splines.size) { (ix, is) =>
-      val x = xs(ix)
-      val spline = splines(is)
-      spline(x)
-    }
     val errorMatrix = DenseMatrix.eye[Double](xs.size)
     val constantMatrix = DenseMatrix.ones[Double](xs.size, 1)
-    val equationMatrix = DenseMatrix.horzcat(regressionMatrix, errorMatrix, constantMatrix)
+    val regMatrix = regressionMatrix(xs)
+    val equationMatrix = DenseMatrix.horzcat(regMatrix, errorMatrix, constantMatrix)
     val equationArrMatrix = toArrayMatrix(equationMatrix)
     val restrictionMatrix = DenseMatrix.horzcat(-DenseMatrix.eye[Double](splines.size), DenseMatrix.zeros[Double](splines.size, xs.size + 1))
-    val minimizationMatrix = DenseMatrix.vertcat(DenseMatrix.zeros[Double](splines.size + 1, splines.size + xs.size + 1), DenseMatrix.horzcat(regressionMatrix * 0.0, errorMatrix, constantMatrix * 0.0))
+    val minimizationMatrix = DenseMatrix.vertcat(DenseMatrix.zeros[Double](splines.size + 1, splines.size + xs.size + 1), DenseMatrix.horzcat(regMatrix * 0.0, errorMatrix, constantMatrix * 0.0))
     println(s"x dims ${xs.size}")
     println(s"splines dims ${splines.size}")
     println(s"Minimiz dims ${minimizationMatrix.rows} ${minimizationMatrix.cols}")
@@ -40,7 +41,7 @@ class MonotoneSplineRegression(knots: Knots) {
     val objectiveFunction = new PDQuadraticMultivariateRealFunction(toArrayMatrix(minimizationMatrix), null, 0)
     val inequalities = (0 until restrictionMatrix.rows).toArray.map { r =>
       val restrictionRow = (0 until restrictionMatrix.cols).toArray.map { c => restrictionMatrix(r, c) }
-      new LinearMultivariateRealFunction(restrictionRow, 0):ConvexMultivariateRealFunction
+      new LinearMultivariateRealFunction(restrictionRow, 0): ConvexMultivariateRealFunction
     }
     val or = new OptimizationRequest()
     or.setF0(objectiveFunction)
