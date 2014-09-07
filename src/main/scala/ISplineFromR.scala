@@ -7,45 +7,22 @@ object ISplineFromR {
     val k = t.length - 2
     val m = k + 3
     val sigma = DenseMatrix.tabulate(m, n) {
-      case (r, j) =>
-        (n * (1 + r)).toDouble
+      case (0, _) => 1.0
+      case (j, r) if j == k + 1 && x(r) <= t(1) => 1 - scala.math.pow(x(r) - t(1), 2) / (t(1) - t(0)) / (t(1) - t(0))
+      case (j, r) if j == k + 1 && x(r) > t(1) => 1.0
+      case (j, r) if j == k + 1 && x(r) > t(k + 2) => 1.0
+      case (j, r) if j == k + 2 && x(r) <= t(k) => 0.0
+      case (j, r) if j == k + 2 && x(r) > t(k) && x(r) <= t(k + 1) => scala.math.pow(x(r) - t(k), 2) / (t(k + 1) - t(k)) / (t(k + 1) - t(k))
+      case (j, r) if j == k + 2 && x(r) > t(k + 1) => 1.0
+      case (j, r) if j == k && x(r) <= t(k - 1) => 0.0
+      case (j, r) if j == k && x(r) > t(k - 1) && x(r) <= t(k) => scala.math.pow(x(r) - t(k - 1), 2) / (t(k + 1) - t(k - 1)) / (t(k) - t(k - 1))
+      case (j, r) if j == k && x(r) > t(k) && x(r) <= t(k + 1) => 1 - scala.math.pow(x(r) - t(k + 1), 2) / (t(k + 1) - t(k)) / (t(k + 1) - t(k - 1))
+      case (j, r) if x(r) <= t(j - 1) => 0.0
+      case (j, r) if x(r) > t(j - 1) && x(r) <= t(j) => scala.math.pow(x(r) - t(j - 1), 2) / (t(j + 1) - t(j - 1)) / (t(j) - t(j - 1))
+      case (j, r) if x(r) > t(j) && x(r) <= t(j + 1) => 1 - scala.math.pow(x(r) - t(j + 1), 2) / (t(j + 1) - t(j)) / (t(j + 1) - t(j - 1))
+      case (j, r) if x(r) > t(j+1) => 1.0
+      case _ => throw new RuntimeException("Should not have gotten here")
     }
-    sigma(0, ::) := 1.0
-    for (j <- 0 until (k - 1)) {
-      val i1 = x.mapPairs((ind, xv) => if (xv <= t(j)) ind else -1).findAll(_ >= 0)
-      i1.foreach(i => sigma.update(j + 1, i, 0))
-      val i2 = x.mapPairs((ind, xv) => if (xv > t(j) && xv <= t(j + 1)) ind else -1).findAll(_ >= 0)
-      i2.foreach(i => sigma.update(j + 1, i, scala.math.pow(x(i) - t(j), 2) / (t(j + 2) - t(j)) / (t(j + 1) - t(j))))
-      val i3 = x.mapPairs((ind, xv) => if (xv > t(j + 1) && xv <= t(j + 2)) ind else -1).findAll(_ >= 0)
-      i3.foreach(i => sigma.update(j + 1, i, 1 - scala.math.pow(x(i) - t(j + 2), 2) / (t(j + 2) - t(j + 1)) / (t(j + 2) - t(j))))
-      val i4 = x.mapPairs((ind, xv) => if (xv > t(j + 2)) ind else -1).findAll(_ >= 0)
-      i4.foreach(i => sigma.update(j + 1, i, 1.0))
-    }
-
-    {
-      val i1 = x.mapPairs((ind, xv) => if (xv <= t(k - 1)) ind else -1).findAll(_ >= 0)
-      i1.foreach(i => sigma.update(k, i, 0))
-      val i2 = x.mapPairs((ind, xv) => if (xv > t(k - 1) && xv <= t(k)) ind else -1).findAll(_ >= 0)
-      i2.foreach(i => sigma.update(k, i, scala.math.pow(x(i) - t(k - 1), 2) / (t(k + 1) - t(k - 1)) / (t(k) - t(k - 1))))
-      val i3 = x.mapPairs((ind, xv) => if (xv > t(k) && xv <= t(k + 1)) ind else -1).findAll(_ >= 0)
-      i3.foreach(i => sigma.update(k, i, 1 - scala.math.pow(x(i) - t(k + 1), 2) / (t(k + 1) - t(k)) / (t(k + 1) - t(k - 1))))
-      val i4 = x.mapPairs((ind, xv) => if (xv > t(k + 1)) ind else -1).findAll(_ >= 0)
-      i4.foreach(i => sigma.update(k, i, 1.0))
-    }
-    {
-      val i1 = x.mapPairs((ind, xv) => if (xv <= t(1)) ind else -1).findAll(_ >= 0)
-      i1.foreach(i => sigma.update(k + 1, i, 1 - scala.math.pow(x(i) - t(1), 2) / (t(1) - t(0)) / (t(1) - t(0))))
-
-      val i2 = x.mapPairs((ind, xv) => if (xv > t(1)) ind else -1).findAll(_ >= 0)
-      i2.foreach(i => sigma.update(k + 1, i, 1.0))
-    }
-    val i1 = x.mapPairs((ind, xv) => if (xv <= t(k)) ind else -1).findAll(_ >= 0)
-    i1.foreach(i => sigma.update(k + 2, i, 0))
-
-    val i2 = x.mapPairs((ind, xv) => if (xv > t(k) && xv <= t(k + 1)) ind else -1).findAll(_ >= 0)
-    i2.foreach(i => sigma.update(k + 2, i, scala.math.pow(x(i) - t(k), 2) / (t(k + 1) - t(k)) / (t(k + 1) - t(k))))
-    val i3 = x.mapPairs((ind, xv) => if (xv > t(k + 1)) ind else -1).findAll(_ >= 0)
-    i3.foreach(i => sigma.update(k + 2, i, 1.0))
 
     for (i <- 1 until m) {
       val sigs = sigma(i, ::)
