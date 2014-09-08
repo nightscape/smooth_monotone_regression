@@ -1,11 +1,10 @@
 import breeze.linalg.DenseMatrix
 import breeze.linalg.DenseVector
 
-class ISplineFromR(t: DenseVector[Double]) {
-  val knots = new ArbitrarilyDistributedKnots(t.toArray)
+class ISplineFromR(knots: Knots) {
   def monotoneIncreasing(x: DenseVector[Double], normalizeCoefficients: Boolean = false): DenseMatrix[Double] = {
     val n = x.length
-    val k = t.length - 2
+    val k = knots.length - 2
     val m = k + 3
     val sigma = DenseMatrix.horzcat(x.toArray.map(monIncr).map(_.toDenseMatrix.t): _*)
     if (normalizeCoefficients) {
@@ -18,7 +17,7 @@ class ISplineFromR(t: DenseVector[Double]) {
     sigma
   }
   def monIncr(x: Double): DenseVector[Double] = {
-    val k = t.length - 2
+    val k = knots.length - 2
     val m = k + 3
     val Interval(index, left, right) = knots.intervalOf(x)
     val sigma = DenseVector.tabulate(m) {

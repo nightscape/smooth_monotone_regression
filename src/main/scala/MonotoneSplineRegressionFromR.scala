@@ -1,7 +1,7 @@
 import breeze.linalg.DenseVector
 import breeze.linalg.DenseMatrix
 
-class MonotoneSplineRegressionFromR(knots: DenseVector[Double]) {
+class MonotoneSplineRegressionFromR(knots: Knots) {
   val splines = new ISplineFromR(knots)
   val optimizer = new HingeQuadraticOptimization
   def learn(xs: DenseVector[Double], ys: DenseVector[Double]): Double => Double = {
