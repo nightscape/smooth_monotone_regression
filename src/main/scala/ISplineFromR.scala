@@ -3,16 +3,17 @@ import breeze.linalg.DenseVector
 
 class ISplineFromR(t: DenseVector[Double]) {
   val knots = new ArbitrarilyDistributedKnots(t.toArray)
-  def monotoneIncreasing(x: DenseVector[Double]): DenseMatrix[Double] = {
+  def monotoneIncreasing(x: DenseVector[Double], normalizeCoefficients: Boolean = false): DenseMatrix[Double] = {
     val n = x.length
     val k = t.length - 2
     val m = k + 3
     val sigma = DenseMatrix.horzcat(x.toArray.map(monIncr).map(_.toDenseMatrix.t): _*)
-
-    for (i <- 1 until m) {
-      val sigs = sigma(i, ::)
-      val ms = breeze.linalg.sum(sigs.t) / sigs.t.size
-      sigs := sigs - ms
+    if (normalizeCoefficients) {
+      for (i <- 1 until m) {
+        val sigs = sigma(i, ::)
+        val ms = breeze.linalg.sum(sigs.t) / sigs.t.size
+        sigs := sigs - ms
+      }
     }
     sigma
   }
