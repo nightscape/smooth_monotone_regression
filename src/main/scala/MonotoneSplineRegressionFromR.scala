@@ -11,11 +11,7 @@ class MonotoneSplineRegressionFromR(knots: Knots) {
     val qmat = edges * edges.t
     val cvec = edges * ys
     val coefficients = optimizer.quadProg(cvec, qmat, amat)
-    val f = {d: Double =>
-      val e = splines.monotoneIncreasing(DenseVector(d))
-      val yhat = (e.t * coefficients)
-      yhat.apply(0)
-    }
+    val f = { d: Double => splines(d).dot(coefficients) }
     f
   }
 }
