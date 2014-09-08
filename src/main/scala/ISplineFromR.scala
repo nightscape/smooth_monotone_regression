@@ -20,17 +20,14 @@ class ISplineFromR(knots: Knots) extends (Double => DenseVector[Double]){
     val k = knots.length - 2
     val m = k + 3
     val Interval(index, left, right) = knots.intervalOf(x)
+    val LastKnot = k + 2
+    val NextToLastKnot = k + 1
     val sigma = DenseVector.tabulate(m) {
       case (0) => 1.0
-      case (j) if j == k + 1 && index == 0 => 1 - scala.math.pow(x - right, 2) / (right - left) / (right - left)
-      case (j) if j == k + 1 && index >= 1 => 1.0
-      case (j) if j == k + 1 && index == k + 2 => 1.0
-      case (j) if j == k + 2 && index < k => 0.0
-      case (j) if j == k + 2 && index == k => scala.math.pow(x - left, 2) / (right - left) / (right - left)
-      case (j) if j == k + 2 && index >= k => 1.0
-      case (j) if j == k && index < k - 1 => 0.0
-      case (j) if j == k && index == k - 1 => scala.math.pow(x - left, 2) / (knots(k + 1) - left) / (right - left)
-      case (j) if j == k && index == k => 1 - scala.math.pow(x - right, 2) / (right - left) / (right - knots(k - 1))
+      case (NextToLastKnot) if index == 0 => 1 - scala.math.pow(x - right, 2) / (right - left) / (right - left)
+      case (NextToLastKnot) if index >= 1 => 1.0
+      case (LastKnot) if index == k => scala.math.pow(x - left, 2) / (right - left) / (right - left)
+      case (LastKnot) if index >= k => 1.0
       case (j) if index < j - 1 => 0.0
       case (j) if index == j - 1 => scala.math.pow(x - left, 2) / (knots(j + 1) - left) / (right - left)
       case (j) if index == j => 1 - scala.math.pow(x - right, 2) / (right - left) / (right - knots(j - 1))
