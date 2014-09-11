@@ -1,4 +1,6 @@
 import breeze.linalg._
+import breeze.numerics._
+import scala.annotation.tailrec
 /**
  * quadratic programming code: hinge algorithm
  *  find theta to minimize t(theta) * qmat * theta - 2* theta * cvec
@@ -10,49 +12,45 @@ import breeze.linalg._
 class HingeQuadraticOptimization {
   def quadProg(cvec: DenseVector[Double], qmat: DenseMatrix[Double], amat: DenseMatrix[Double]): DenseVector[Double] = {
     val n = cvec.size
-    val m = amat.size / n
-    var sm = 1e-10
-    var h = Array.fill(m)(false)
-    var obs = (0 until m - 1).toArray
-    var check = 0
+    val m = amat.size / cvec.size
+    val sm = 1e-10
     val umat = cholesky(qmat).t
     val uinv = inv(umat)
     val delta = -amat * uinv
     val y = uinv.t * cvec
-    var b2 = delta * y
-    print(b2)
-    var theta: DenseVector[Double] = null
-    if (max(b2) > sm) {
-
-      val i = argmax(b2)
-      h(i) = true
-    } else {
-      check = 1
-      theta = DenseVector.fill(n, 0.0)
+    def worst(b2: DenseVector[Double]): Int = {
+      if (max(b2) > sm)
+        argmax(b2)
+      else
+        -1
     }
-    while (check == 0) {
-      val chosenRows = h.zipWithIndex.collect { case (true, i) => i }.toVector
-      var xmat = DenseMatrix.tabulate(chosenRows.length, delta.cols) { (r, c) =>
-        delta(chosenRows(r), c)
-      }
+    @tailrec
+    def improve(b2: DenseVector[Double], h: BitVector): DenseVector[Double] = {
+      val xmat = delta(h.activeKeysIterator.toIndexedSeq, ::).toDenseMatrix
       val a = inv(xmat * xmat.t) * xmat * y
+      val theta = xmat.t * a
+      val b2 = delta * (y - theta)
       if (min(a) < (-sm)) {
         val avec = DenseVector.fill(m, 0.0)
-        chosenRows.zipWithIndex.foreach { case (r, i) => avec.update(r, a(i)) }
+        h.activeKeysIterator.zipWithIndex.foreach { case (r, i) => avec.update(r, a(i)) }
         val i = argmin(avec)
         h(i) = false
-        check = 0
+        improve(b2, h)
       } else {
-        check = 1
-        theta = xmat.t * a
-        b2 = delta * (y - theta)
-        if (max(b2) > sm) {
-          val i = argmax(b2)
-          h(i) = true
-          check = 0
-        }
+        val w = worst(b2)
+        if (w >= 0) {
+          h(w) = true
+          improve(b2, h)
+        } else
+          theta
       }
     }
+    val w = worst(delta * y)
+    val theta: DenseVector[Double] = if (w >= 0) {
+      val h = BitVector(m)(w)
+      improve(delta * y, h)
+    } else
+      DenseVector.zeros[Double](n)
     val bhat = uinv * (y - theta)
     bhat
   }

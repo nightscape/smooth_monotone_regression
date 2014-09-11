@@ -38,7 +38,7 @@ class HingeQuadraticOptimizationTest extends PropSpec with PropertyChecks with M
     var theta: DenseVector[Double] = null
     if (max(b2) > sm) {
 
-      val i = b2.argmax
+      val i = argmax(b2)
       checkMatrix("i", new DenseMatrix[Double](1, 1, Array(i.toDouble)))
       h(i) = true
     } else {
@@ -73,7 +73,7 @@ class HingeQuadraticOptimizationTest extends PropSpec with PropertyChecks with M
         b2 = delta * (y - theta)
         checkMatrix("b2", b2.toDenseMatrix)
         if (max(b2) > sm) {
-          val i = b2.argmax
+          val i = argmax(b2)
           checkMatrix("i", new DenseMatrix[Double](1, 1, Array(i.toDouble)))
           h(i) = true
           check = 0
@@ -89,7 +89,7 @@ class HingeQuadraticOptimizationTest extends PropSpec with PropertyChecks with M
     val amat = DenseMatrix.create(8, 8, Array[Double](0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1))
     val cvec = DenseVector(14.38177, 1.010953, 2.554774, 2.984773, 3.118192, 1.27234, 0.4823596, 0.912791)
     val bhat = DenseVector(0.4358112, 0.1342831, 0.1105716, 2.349282e-16, 0.3448744, 0.2590386, 0.1034939, -2.499804e-16)
-    val result = quadProg(cvec, qmat, amat)
+    val result = (new HingeQuadraticOptimization).quadProg(cvec, qmat, amat)
     result should beSimilarTo(bhat, allowedDeviation = 1.0E-4)
   }
 }
